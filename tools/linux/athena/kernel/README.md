@@ -99,6 +99,10 @@ The BOE-new link settings are adapted from nuno407's
 The contributor measured the bootloader's link at 478 Mbps per lane. His porch and clock settings
 corrected moving flicker; his 25 kHz backlight PWM setting made brightness follow duty changes.
 
+The 79.68 MHz clock and 962-pixel horizontal total retain the existing 1,326-line vertical total.
+The nominal DRM refresh is therefore 62.46 Hz, up from 60 Hz. This is calculated from the mode;
+the bootloader's vertical timing and the panel's actual refresh have not been measured here.
+
 The Linux 6.18 backport adds an optional panel flag field. Only BOE-new uses it: burst video, LPM
 commands, and EOT packets. Enabling EOT is part of the tested combination, and mediatek-dsi includes
 its two bytes of overhead when computing the porches. It has not been tested as an independent fix.

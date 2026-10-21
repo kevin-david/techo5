@@ -5,6 +5,8 @@
 Backported from nuno407/techo5 commit 47717b743e2348d5e268d07b303ec04ded966111,
 custom-kernel/athena/patches/jd9365-dsi-mode.py. The contributor measured LK's link at 478 Mbps
 per lane. His 79.68 MHz, 108/22/32-pixel front/sync/back porches corrected moving flicker.
+The unchanged 1326-line vertical total gives a nominal 62.46 Hz DRM mode; LK's vertical timing
+and the panel's actual refresh have not been measured here.
 
 Linux 6.18 needs an optional descriptor mode_flags field and a probe fallback. Only BOE-new
 overrides the old VIDEO | VIDEO_BURST | NO_EOT_PACKET default. Its flags add LPM and enable EOT
