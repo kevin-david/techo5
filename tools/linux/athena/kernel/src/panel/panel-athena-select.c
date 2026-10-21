@@ -60,6 +60,43 @@ static int __init athena_jd936x_id(char *s)
 }
 __setup("jd936x_id=", athena_jd936x_id);
 
+/* Only BOE-new has been tested at 25 kHz. Keep the DTS's 2 kHz for every other panel. */
+static void __init athena_boe_new_backlight(struct device_node *panel)
+{
+	struct device_node *backlight;
+	struct property *prop;
+	const void *pwms;
+	int len;
+
+	if (!of_device_is_compatible(panel, "amazon,athena-jd9365-boe-new"))
+		return;
+	backlight = of_parse_phandle(panel, "backlight", 0);
+	if (!backlight)
+		return;
+	pwms = of_get_property(backlight, "pwms", &len);
+	/* This board's binding is <pwm-controller channel period-ns>. */
+	if (!pwms || len != 3 * sizeof(__be32))
+		goto out;
+	prop = kzalloc(sizeof(*prop), GFP_KERNEL);
+	if (!prop)
+		goto out;
+	prop->value = kmemdup(pwms, len, GFP_KERNEL);
+	if (!prop->value) {
+		kfree(prop);
+		goto out;
+	}
+	prop->name = "pwms";
+	prop->length = len;
+	((__be32 *)prop->value)[2] = cpu_to_be32(40000); /* 25 kHz */
+	if (of_update_property(backlight, prop)) {
+		pr_err("athena panel: could not set BOE-new backlight period\n");
+		kfree(prop->value);
+		kfree(prop);
+	}
+out:
+	of_node_put(backlight);
+}
+
 /* Whether the tag holds name as a whole string (after a NUL or its start, before a NUL or its end). */
 static bool athena_tag_names(const char *tag, int len, const char *name)
 {
@@ -115,6 +152,8 @@ static int __init athena_panel_select(void)
 	if (of_update_property(np, prop)) {
 		pr_err("athena panel: could not set %pOF's compatible\n", np);
 		kfree(prop);
+	} else {
+		athena_boe_new_backlight(np);
 	}
 out:
 	of_node_put(np);

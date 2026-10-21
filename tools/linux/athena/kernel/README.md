@@ -62,6 +62,8 @@ reasoning; each one checks its anchors and is a no-op on a tree it has already p
 | `patch-btmtksdio-late-register.py` | btmtksdio: register the driver 8 s after boot, so that Wi-Fi starts the shared MT7663 alone (they raced on about one boot in three and both failed). |
 | `patch-mt7663s-firmware-hold.py` | mt7663s: load the four MT7663 firmware files at init, while the initramfs is still the root, and keep them, so that later requests (Wi-Fi's init work, Bluetooth at 8 s) are served from memory after the real root has replaced the initramfs. See [Firmware](#firmware). |
 | `patch-display.py` + `panel/0001`-`0004` + `src/panel/` | Panel tables for athena's ILI9881C and JD9365 panels (bindings and drivers); `panel-athena-select.c` picks the unit's own panel at boot from the name LK passes, so one image drives every screen; and mediatek-drm removes the bootloader's simple-framebuffer when it binds, so its fbdev emulation becomes `/dev/fb0`. |
+| `patch-jd9365-dsi-mode.py` | BOE-new only: 79.68 MHz, horizontal front/sync/back porches of 108/22/32 pixels, low-power initialization commands, and EOT packets. Other panel descriptions keep their old flags and timing. |
+| `patch-mtk-dsi-cmd-clock-lp.py` | Use a low-power clock for LPM commands, then restore continuous video when requested. Only BOE-new changes among Athena's panel configurations. |
 | `patch-tas5805m-dsp-slot.py` | tas5805m: take the DSP configuration from the device-tree slot, and keep the sound card up without one (below). `tas5805m-dsp-slot.diff` shows the change it makes, for reading. |
 | `patch-cci-sram.py` | mtk-cci-devfreq: SRAM voltage limits for MT8183, the same as mediatek-cpufreq has. athena gives the CCI an SRAM supply (Fire OS sets the CPU SRAM rails in software), and without limits the driver asked for a range with a maximum of 0 V and the kernel stopped at boot. |
 | `patch-thermal-devinfo.py` | auxadc_thermal: when the efuse reads as zeros (Amazon's secure firmware hides it from Linux), take the thermal calibration from the copy LK puts in `/chosen` as `atag,devinfo`. Without it the driver used default values and read several degrees off. |
@@ -89,6 +91,31 @@ panel patches, taken from Amazon's GPL-2.0 kernel for the device (its LCM driver
 LCM name LK leaves in `/chosen` `atag,videolfb` (or the `jd936x_id=` nibble); the node carries the
 JD9365 driver's supplies too (see the comment at `&dsi0`). All the panel init tables, the tested one
 included, are taken from that kernel.
+
+### JD9365 BOE-new
+
+The BOE-new link settings are adapted from nuno407's
+[Linux 7.2 display fixes](https://github.com/nuno407/techo5/blob/47717b743e2348d5e268d07b303ec04ded966111/custom-kernel/athena/README.md#other-panels).
+The contributor measured the bootloader's link at 478 Mbps per lane. His porch and clock settings
+corrected moving flicker; his 25 kHz backlight PWM setting made brightness follow duty changes.
+
+The Linux 6.18 backport adds an optional panel flag field. Only BOE-new uses it: burst video, LPM
+commands, and EOT packets. Enabling EOT is part of the tested combination, and mediatek-dsi includes
+its two bytes of overhead when computing the porches. It has not been tested as an independent fix.
+The panel selector changes the backlight period to 40,000 ns before device probing only when it
+selects BOE-new. The DTS keeps its original 500,000 ns period for every other panel. All other
+JD9365 flags and all ILI9881C clock settings stay the same.
+
+An earlier, broader Linux 6.18 build ran on one additional BOE-new unit on 2026-10-21: its kernel
+trial completed, and the user confirmed stable static text and working touch. That build changed
+other JD9365 flags and the board's default PWM too. This narrower build on current upstream has
+not been tested on hardware. Brightness range, blank/resume, audible sound, and repeated boots
+still need checking.
+
+A later v1.5.0 firmware update replaced that working test kernel with the release's bundled kernel
+and the shimmer returned. This patch does not change the updater: a local kernel is replaced when
+a new slot contains a different kernel. An official release must include the display fix to retain
+it through normal firmware updates.
 
 ## Firmware
 
