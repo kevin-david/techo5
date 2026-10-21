@@ -176,21 +176,7 @@ mv "$SRCTAR.part" "$SRCTAR"
 # that kernel.org's own tarball does not already have (it has a few /home/ in documentation). The
 # kernel.org tarball is fetched for that when KTREE stood in for it.
 fetch "$KURL" "$CACHE/linux-$KVER.tar.xz" "$KSHA256"
-esc() { printf '%s' "$1" | sed 's/[][\.*^$+?(){}|]/\\&/g'; }
-pat="/home/|relbuild|$(esc "$WORK")|$(esc "$KTREE")"
-for n in "$(id -un)" "${USER:-}" "${SUDO_USER:-}"; do
-	case "$n" in ""|root|techo5) ;; *) pat="$pat|\b$(esc "$n")\b";; esac
-done
-count() { grep -aoiE "$pat" | tr 'A-Z' 'a-z' | sort | uniq -c; }
-ours=$(tar -xJOf "$SRCTAR" | count || true)
-theirs=$(tar -xJOf "$CACHE/linux-$KVER.tar.xz" | count || true)
-names=$(tar -tJf "$SRCTAR" | grep -iE "$pat" || true)
-if [ -n "$names" ] || [ "$ours" != "$theirs" ]; then
-	echo "$SRCTAR carries something of this computer:" >&2
-	echo "  kernel.org's: $theirs" >&2; echo "  ours: $ours" >&2
-	[ -z "$names" ] || echo "  in names: $(echo "$names" | head -5)" >&2
-	exit 1
-fi
+bash "$HERE/check-source-paths.sh" "$SRCTAR" "$CACHE/linux-$KVER.tar.xz" "$WORK" "$KTREE"
 python3 "$HERE/check-source.py" --config "$OUT/kernel.config" "$SRCTAR" "$OUT/boot-athena.img"
 rm -rf "$PKG"
 

@@ -44,6 +44,13 @@ sets
 fixed values and maps its own directory out of the debug info (the linker's build-id in the Image
 hashes it), so the output does not depend on where it is built.
 
+To repeat the host-path check after packaging, run
+`bash tools/linux/athena/kernel/check-source-paths.sh SOURCE BASELINE WORK KTREE`
+as the original builder with the same `USER` and `SUDO_USER` values. `BASELINE` is the pinned
+kernel.org archive; `WORK` and `KTREE` are the original absolute, non-root build directories.
+Trailing slashes are accepted. The checker cannot discover another builder's username.
+Archive fixtures: `python3 tools/test_kernel_source_paths.py`.
+
 ## Patches
 
 Applied by `build.sh` in this order. The Python patchers each carry a docstring with the full
