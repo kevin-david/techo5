@@ -49,7 +49,7 @@ export KBUILD_BUILD_USER=techo5 KBUILD_BUILD_HOST=athena-build
 # changes (a patch, the config, the kernel.org version), or a unit cannot tell the new kernel from
 # the one before. 2026-10-15 was v1.2.16 to v1.2.18's, 2026-10-16 v1.2.19 to v1.2.23's, 2026-10-19
 # v1.2.24's, 2026-10-20 12:00 the echo reference and panic on an RCU stall.
-export KBUILD_BUILD_TIMESTAMP="2026-10-20 12:00:00 UTC" KBUILD_BUILD_VERSION=1
+export KBUILD_BUILD_TIMESTAMP="2026-10-21 16:00:00 UTC" KBUILD_BUILD_VERSION=3
 export LC_ALL=C TZ=UTC
 
 mkdir -p "$WORK/cache" "$OUT"
@@ -110,6 +110,8 @@ python3 "$P/patch-btmtksdio-p192.py" "$KTREE"
 python3 "$P/patch-btmtksdio-late-register.py" "$KTREE"
 python3 "$P/patch-mt7663s-firmware-hold.py" "$KTREE"
 python3 "$P/patch-display.py" "$KTREE"
+python3 "$P/patch-jd9365-dsi-mode.py" "$KTREE"
+python3 "$P/patch-mtk-dsi-cmd-clock-lp.py" "$KTREE"
 python3 "$P/patch-tas5805m-dsp-slot.py" "$KTREE"
 python3 "$P/patch-cci-sram.py" "$KTREE"
 python3 "$P/patch-thermal-devinfo.py" "$KTREE"
